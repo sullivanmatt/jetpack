@@ -98,7 +98,7 @@ export default function JetpackPaymentsIntroEdit( { name, clientId } ) {
 		return (
 			<Placeholder
 				icon={ get( blockType, [ 'icon', 'src' ] ) }
-				label={ get( blockType, [ 'title' ] ) + 'flibble' }
+				label={ get( blockType, [ 'title' ] ) }
 				instructions={ __( 'Start by choosing one of our suggested layout patterns', 'jetpack' ) }
 				className="wp-payments-intro-wrapper"
 			>
