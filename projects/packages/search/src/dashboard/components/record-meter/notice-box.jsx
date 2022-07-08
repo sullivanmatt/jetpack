@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { __, sprintf } from '@wordpress/i18n';
 import SimpleNotice from 'components/notice';
-import NoticeAction from 'components/notice/notice-action.jsx';
+import NoticeAction from 'components/notice/notice-action';
 import React from 'react';
 
 import './notice-box.scss';
