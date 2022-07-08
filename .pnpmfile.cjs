@@ -11,21 +11,11 @@
  * @returns {object} Modified pkg.
  */
 function fixDeps( pkg ) {
-	// Why do they not publish new versions from their monorepo?
-	if ( pkg.name === '@automattic/social-previews' ) {
-		// 1.1.1 published 2021-04-08
-		if ( pkg.dependencies[ '@wordpress/components' ] === '^12.0.8' ) {
-			// Update to avoid a dep on @emotion/native that wants react-native.
-			// This dep update is in their monorepo as of 2022-03-10 with no code changes.
-			pkg.dependencies[ '@wordpress/components' ] = '^19.2.0';
-		}
-	}
+	// Way too many dependencies, some of them vulnerable, that we don't need for the one piece of this that we actually use.
 	if ( pkg.name === '@automattic/components' ) {
-		// 1.0.0-alpha.3 published 2020-11-11. Not that we want alpha.4, they added an i18n-calypso dep (ugh).
-		if ( ! pkg.dependencies[ '@wordpress/base-styles' ] ) {
-			// Depends on this but doesn't specify it.
-			pkg.dependencies[ '@wordpress/base-styles' ] = '^4.0.4';
-		}
+		delete pkg.dependencies[ '@automattic/data-stores' ];
+		delete pkg.dependencies[ 'i18n-calypso' ];
+		delete pkg.dependencies[ 'wpcom-proxy-request' ];
 	}
 
 	// Depends on punycode but doesn't declare it.
@@ -50,29 +40,29 @@ function fixDeps( pkg ) {
 		}
 	}
 
-	// Outdated dep.
-	// https://github.com/SamVerschueren/stream-to-observable/pull/9
+	// Missing dep or peer dep on @wordpress/element.
+	// https://github.com/WordPress/gutenberg/issues/41341
+	// https://github.com/WordPress/gutenberg/issues/41346
 	if (
-		pkg.name === '@samverschueren/stream-to-observable' &&
-		pkg.dependencies[ 'any-observable' ] === '^0.3.0'
+		( pkg.name === '@wordpress/preferences' || pkg.name === '@wordpress/viewport' ) &&
+		! pkg.dependencies?.[ '@wordpress/element' ] &&
+		! pkg.peerDependencies?.[ '@wordpress/element' ]
 	) {
-		pkg.dependencies[ 'any-observable' ] = '^0.5.1';
+		pkg.peerDependencies[ '@wordpress/element' ] = '*';
 	}
 
-	// Project is supposedly not dead, but still isn't being updated.
-	// For our purposes at least it seems to work fine with jest-environment-jsdom 28.
-	// https://github.com/enzymejs/enzyme-matchers/issues/353
-	if ( pkg.name === 'jest-environment-enzyme' ) {
-		pkg.dependencies[ 'jest-environment-jsdom' ] = '^28';
-	}
-
-	// Need to match the version of jest used everywhere else.
+	// Missing dep or peer dep on @babel/runtime
+	// https://github.com/WordPress/gutenberg/issues/41343
+	// https://github.com/Automattic/wp-calypso/issues/64034
+	// https://github.com/Automattic/wp-calypso/pull/64464
 	if (
-		pkg.name === '@wordpress/jest-preset-default' &&
-		pkg.dependencies[ 'babel-jest' ] &&
-		pkg.dependencies[ 'babel-jest' ].startsWith( '^27' )
+		( pkg.name === '@wordpress/reusable-blocks' ||
+			pkg.name === '@automattic/popup-monitor' ||
+			pkg.name === '@automattic/social-previews' ) &&
+		! pkg.dependencies?.[ '@babel/runtime' ] &&
+		! pkg.peerDependencies?.[ '@babel/runtime' ]
 	) {
-		pkg.dependencies[ 'babel-jest' ] = '^28';
+		pkg.peerDependencies[ '@babel/runtime' ] = '^7';
 	}
 
 	// Turn @wordpress/eslint-plugin's eslint plugin deps into peer deps.
@@ -83,14 +73,6 @@ function fixDeps( pkg ) {
 				pkg.peerDependencies[ dep ] = ver.replace( /^\^?/, '>=' );
 			}
 		}
-	}
-
-	// Unpin browserslist here.
-	if (
-		pkg.name === 'react-dev-utils' &&
-		pkg.dependencies.browserslist.match( /^\d+\.\d+\.\d+$/ )
-	) {
-		pkg.dependencies.browserslist = '^' + pkg.dependencies.browserslist;
 	}
 
 	// Override @types/react* dependencies in order to use their specific versions
@@ -128,45 +110,12 @@ function fixPeerDeps( pkg ) {
 		}
 	}
 
-	// Peer-depends on js-git but doesn't declare it.
-	// https://github.com/creationix/git-node-fs/pull/8
-	// Note pnpm 6.32.12 and 7.0.1 include this override upstream.
-	if ( pkg.name === 'git-node-fs' && ! pkg.peerDependencies?.[ 'js-git' ] ) {
-		pkg.peerDependencies[ 'js-git' ] = '*';
-	}
-
-	// Undeclared peer dependencies.
-	// Note pnpm 6.32.12 and 7.0.1 include this override upstream.
-	if ( pkg.name === 'eslint-module-utils' ) {
-		pkg.peerDependenciesMeta ||= {};
-		for ( const dep of [
-			'@typescript-eslint/parser',
-			'eslint-import-resolver-node',
-			'eslint-import-resolver-typescript',
-			'eslint-import-resolver-webpack',
-		] ) {
-			pkg.peerDependencies[ dep ] = '*';
-			pkg.peerDependenciesMeta[ dep ] = { optional: true };
-		}
-	}
+	// Missing peer dependency.
 	if (
-		pkg.name === 'eslint-plugin-import' &&
-		! pkg.peerDependencies?.[ '@typescript-eslint/parser' ]
+		pkg.name === 'eslint-plugin-wpcalypso' &&
+		! pkg.peerDependencies?.[ 'eslint-plugin-react' ]
 	) {
-		pkg.peerDependenciesMeta ||= {};
-		pkg.peerDependencies[ '@typescript-eslint/parser' ] = '*';
-		pkg.peerDependenciesMeta[ '@typescript-eslint/parser' ] = { optional: true };
-	}
-
-	// Outdated. Looks like they're going to drop the eslint-config-wpcalypso package entirely with
-	// eslint-plugin-wpcalypso 5.1.0, but they haven't released that yet.
-	if ( pkg.name === 'eslint-config-wpcalypso' ) {
-		pkg.peerDependencies.eslint = '^8';
-		pkg.peerDependencies[ 'eslint-plugin-inclusive-language' ] = '*';
-		pkg.peerDependencies[ 'eslint-plugin-jsdoc' ] = '*';
 		pkg.peerDependencies[ 'eslint-plugin-react' ] = '*';
-		pkg.peerDependencies[ 'eslint-plugin-react-hooks' ] = '*';
-		pkg.peerDependencies[ 'eslint-plugin-wpcalypso' ] = '*';
 	}
 
 	return pkg;
@@ -188,8 +137,29 @@ function readPackage( pkg, context ) {
 	return pkg;
 }
 
+/**
+ * Pnpm lockfile hook.
+ *
+ * @see https://pnpm.io/pnpmfile#hooksafterallresolvedlockfile-context-lockfile--promiselockfile
+ * @param {object} lockfile - Lockfile data.
+ * @returns {object} Modified lockfile.
+ */
+function afterAllResolved( lockfile ) {
+	for ( const [ k, v ] of Object.entries( lockfile.packages ) ) {
+		// Forbid installing webpack without webpack-cli. It results in lots of spurious lockfile changes.
+		// https://github.com/pnpm/pnpm/issues/3935
+		if ( k.startsWith( '/webpack/' ) && ! v.dependencies[ 'webpack-cli' ] ) {
+			throw new Error(
+				"Something you've done is trying to add a dependency on webpack without webpack-cli.\nThis is not allowed, as it tends to result in pnpm lockfile flip-flopping.\nSee https://github.com/pnpm/pnpm/issues/3935 for the upstream bug report."
+			);
+		}
+	}
+	return lockfile;
+}
+
 module.exports = {
 	hooks: {
 		readPackage,
+		afterAllResolved,
 	},
 };

@@ -1,6 +1,3 @@
-/**
- * Internal dependencies
- */
 const debug = require( '../../debug' );
 const getAssociatedPullRequest = require( '../../get-associated-pull-request' );
 
@@ -79,9 +76,9 @@ async function wpcomCommitReminder( payload, octokit ) {
 	const { commits, ref, repository } = payload;
 	const { name: repo, owner } = repository;
 
-	// We should not get to that point as the action is triggered on pushes to master, but...
-	if ( ref !== 'refs/heads/master' ) {
-		debug( 'wpcom-commit-reminder: Commit is not to `master`. Aborting' );
+	// We should not get to that point as the action is triggered on pushes to trunk, but...
+	if ( ref !== 'refs/heads/trunk' ) {
+		debug( 'wpcom-commit-reminder: Commit is not to `trunk`. Aborting' );
 		return;
 	}
 
@@ -104,7 +101,7 @@ async function wpcomCommitReminder( payload, octokit ) {
 	// Build our comment body.
 	const comment = `
 Great news! One last step: head over to your WordPress.com diff, ${ diffId[ 0 ] }, and deploy it.
-Once you've done so, come back to this PR and add a comment with your changeset ID.
+Once you've done so, come back to this PR and add a comment with your SVN changeset ID (e.g. \`r12345-wpcom\`).
 
 **Thank you!**
 	`;
