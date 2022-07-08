@@ -1,14 +1,13 @@
-/**
- * Internal dependencies
- */
-import siteDataSelectors from './site-data';
-import connectionsSelectors from './connections';
+import connectionDataSelectors from './connection-data';
 import jetpackSettingSelectors from './jetpack-settings';
+import sharesCountSelectors from './shares-count';
+import siteDataSelectors from './site-data';
 
 const selectors = {
 	...siteDataSelectors,
-	...connectionsSelectors,
+	...connectionDataSelectors,
 	...jetpackSettingSelectors,
+	...sharesCountSelectors,
 };
 
 export default selectors;
