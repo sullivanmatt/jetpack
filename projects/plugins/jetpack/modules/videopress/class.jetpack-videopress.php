@@ -69,7 +69,7 @@ class Jetpack_VideoPress {
 
 		if ( $this->is_videopress_enabled() ) {
 			add_action( 'admin_notices', array( $this, 'media_new_page_admin_notice' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_jwt_token_bridge' ), 1 );
+			add_action( 'admin_enqueue_scripts', array( 'Jetpack_VideoPress', 'enqueue_jwt_token_bridge' ), 1 );
 		}
 	}
 
